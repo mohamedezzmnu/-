@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color-background-primary:#ffffff;--color-background-secondary:#f5f5f3;
+  --color-background-tertiary:#eeede8;--color-background-success:#E1F5EE;
+  --color-background-danger:#FAECE7;--color-background-info:#E6F1FB;
+  --color-background-warning:#FAEEDA;
+  --color-text-primary:#1a1a18;--color-text-secondary:#5f5e5a;
+  --color-text-success:#0F6E56;--color-text-danger:#993C1D;
+  --color-text-info:#185FA5;--color-text-warning:#854F0B;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --border-radius-md:8px;--border-radius-lg:12px;--font-sans:system-ui,-apple-system,sans-serif
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1e1e1c;--color-background-secondary:#2a2a28;
+    --color-background-tertiary:#141412;--color-background-success:#04342C;
+    --color-background-danger:#4A1B0C;--color-background-info:#042C53;
+    --color-background-warning:#412402;
+    --color-text-primary:#f0efe8;--color-text-secondary:#b4b2a9;
+    --color-text-success:#9FE1CB;--color-text-danger:#F5C4B3;
+    --color-text-info:#85B7EB;--color-text-warning:#FAC775;
+    --color-border-tertiary:rgba(255,255,255,0.1)
+  }
+}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);font-size:14px}
+.app{max-width:520px;margin:0 auto;padding:1.25rem 1rem;direction:rtl}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.header h1{font-size:18px;font-weight:500;display:flex;align-items:center;gap:8px}
+.pill-icon{width:30px;height:30px;background:var(--color-background-info);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px}
+.clock-badge{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:5px 12px;font-size:13px;font-weight:500;color:var(--color-text-secondary)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+.stat-num{font-size:20px;font-weight:500;color:#534AB7}
+.stat-num.green{color:#0F6E56}
+.stat-num.gray{color:var(--color-text-secondary)}
+.stat-num.amber{color:#854F0B}
+.stat-label{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.progress-bar-wrap{background:var(--color-background-secondary);border-radius:100px;height:6px;margin-bottom:1rem;overflow:hidden}
+.progress-bar{height:6px;background:#534AB7;border-radius:100px;width:0%;transition:width 0.4s}
+.tabs{display:flex;gap:4px;margin-bottom:1rem;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:4px}
+.tab{flex:1;padding:7px;text-align:center;border-radius:var(--border-radius-md);cursor:pointer;font-size:12px;border:none;background:transparent;color:var(--color-text-secondary);transition:all 0.2s}
+.tab.active{background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500;border:0.5px solid var(--color-border-tertiary)}
+.panel{display:none}.panel.active{display:block}
+.add-card{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:1rem 1.25rem;margin-bottom:1rem}
+.add-card-title{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500}
+.row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.row input,.row select,.row textarea{flex:1;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;min-width:0;font-family:var(--font-sans)}
+.row textarea{resize:none;height:60px}
+.row label{font-size:12px;color:var(--color-text-secondary);white-space:nowrap;min-width:70px}
+.add-btn{padding:9px 18px;border-radius:var(--border-radius-md);border:none;background:#534AB7;color:#EEEDFE;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:13px;font-weight:500;color:var(--color-text-secondary)}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{padding:4px 10px;border-radius:100px;border:0.5px solid var(--color-border-tertiary);background:transparent;font-size:11px;color:var(--color-text-secondary);cursor:pointer}
+.filter-btn.active{background:#EEEDFE;border-color:#AFA9EC;color:#534AB7}
+.med-list{display:flex;flex-direction:column;gap:8px}
+.med-card{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:12px 14px;transition:all 0.2s}
+.med-card.taken{opacity:0.55}
+.med-card.upcoming{border-right:3px solid #534AB7}
+.med-card.overdue{border-right:3px solid #D85A30}
+.med-card.soon{border-right:3px solid #BA7517}
+.med-main{display:flex;align-items:center;gap:10px}
+.med-dot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.med-dot.purple{background:#EEEDFE}
+.med-dot.teal{background:#E1F5EE}
+.med-dot.coral{background:#FAECE7}
+.med-dot.taken-bg{background:var(--color-background-secondary)}
+.med-info{flex:1;min-width:0}
+.med-name{font-size:14px;font-weight:500}
+.med-meta{font-size:11px;color:var(--color-text-secondary);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.med-note{font-size:11px;color:var(--color-text-secondary);margin-top:4px;font-style:italic}
+.badge{display:inline-block;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:500}
+.badge.upcoming{background:#EEEDFE;color:#3C3489}
+.badge.overdue{background:#FAECE7;color:#993C1D}
+.badge.taken{background:#E1F5EE;color:#085041}
+.badge.soon{background:#FAEEDA;color:#854F0B}
+.badge.repeat{background:var(--color-background-info);color:var(--color-text-info)}
+.med-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.take-btn{padding:5px 11px;border-radius:var(--border-radius-md);border:0.5px solid #1D9E75;background:transparent;color:#0F6E56;font-size:11px;cursor:pointer}
+.take-btn.undo{border-color:var(--color-border-tertiary);color:var(--color-text-secondary)}
+.del-btn{padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);font-size:12px;cursor:pointer}
+.expand-btn{padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);font-size:12px;cursor:pointer}
+.med-expanded{margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);display:none}
+.med-expanded.open{display:block}
+.snooze-row{display:flex;gap:6px;flex-wrap:wrap}
+.snooze-btn{padding:4px 10px;border-radius:100px;border:0.5px solid var(--color-border-tertiary);background:transparent;font-size:11px;color:var(--color-text-secondary);cursor:pointer}
+.snooze-btn:hover{background:var(--color-background-secondary)}
+.log-section{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px}
+.log-entry{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.log-entry:last-child{border:none}
+.log-date{color:var(--color-text-secondary)}
+.log-status.ok{color:var(--color-text-success)}
+.log-status.late{color:var(--color-text-warning)}
+.log-status.missed{color:var(--color-text-danger)}
+.empty{text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:13px;border:0.5px dashed var(--color-border-tertiary);border-radius:var(--border-radius-lg)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#3C3489;color:#EEEDFE;padding:9px 18px;border-radius:var(--border-radius-md);font-size:13px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+.compliance-bar{display:flex;align-items:center;gap:8px;margin-top:4px}
+.compliance-label{font-size:11px;color:var(--color-text-secondary);min-width:60px}
+.c-bar-wrap{flex:1;background:var(--color-background-secondary);border-radius:100px;height:4px;overflow:hidden}
+.c-bar{height:4px;border-radius:100px;transition:width 0.4s}
+.backup-row{display:flex;gap:8px;margin-top:1rem}
+.backup-btn{flex:1;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;font-size:12px;cursor:pointer;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:center;gap:6px}
+.backup-btn:hover{background:var(--color-background-secondary)}
+.days-check{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.day-cb{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--color-text-secondary);cursor:pointer}
+.day-cb input{width:12px;height:12px}
+.repeat-row{display:flex;gap:8px;align-items:center}
+.repeat-row select{flex:1}
+.repeat-row input[type=number]{width:60px;flex:none}
+@media(prefers-color-scheme:dark){
+  .filter-btn.active{background:#3C3489;border-color:#534AB7;color:#EEEDFE}
+  .badge.upcoming{background:#26215C;color:#AFA9EC}
+  .badge.soon{background:#412402;color:#FAC775}
+  .badge.overdue{background:#4A1B0C;color:#F5C4B3}
+  .badge.taken{background:#04342C;color:#9FE1CB}
+  .med-dot.purple{background:#26215C}
+  .med-dot.teal{background:#04342C}
+  .med-dot.coral{background:#4A1B0C}
+  .tab.active{border-color:rgba(255,255,255,0.1)}
+  .stat-num{color:#AFA9EC}
+  .stat-num.green{color:#9FE1CB}
+  .stat-num.amber{color:#FAC775}
+}
+.ring{animation:shake 0.5s ease 3;box-shadow:0 0 0 3px #EEEDFE}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.dot-live{width:6px;height:6px;background:#1D9E75;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1><div class="pill-icon">💊</div> تذكير الدواء</h1>
+    <div class="clock-badge" id="clock">--:--</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num" id="s-total">0</div><div class="stat-label">إجمالي</div></div>
+    <div class="stat"><div class="stat-num green" id="s-taken">0</div><div class="stat-label">تم أخذها</div></div>
+    <div class="stat"><div class="stat-num gray" id="s-rem">0</div><div class="stat-label">متبقي</div></div>
+    <div class="stat"><div class="stat-num amber" id="s-comply">0%</div><div class="stat-label">الالتزام</div></div>
+  </div>
+
+  <div class="progress-bar-wrap"><div class="progress-bar" id="prog"></div></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today',this)">اليوم</button>
+    <button class="tab" onclick="switchTab('add',this)">إضافة دواء</button>
+    <button class="tab" onclick="switchTab('history',this)">السجل</button>
+    <button class="tab" onclick="switchTab('backup',this)">النسخ الاحتياطي</button>
+  </div>
+
+  <div id="panel-today" class="panel active">
+    <div class="section-header">
+      <div class="section-title">أدوية اليوم</div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">الكل</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">متبقي</button>
+        <button class="filter-btn" onclick="setFilter('taken',this)">تم</button>
+      </div>
+    </div>
+    <div class="med-list" id="list"></div>
+  </div>
+
+  <div id="panel-add" class="panel">
+    <div class="add-card">
+      <div class="add-card-title">بيانات الدواء الأساسية</div>
+      <div class="row"><label>الاسم</label><input type="text" id="medName" placeholder="مثال: باراسيتامول" /></div>
+      <div class="row"><label>الوقت</label><input type="time" id="medTime" /></div>
+      <div class="row">
+        <label>الجرعة</label>
+        <select id="medDose">
+          <option>قرص واحد</option><option>قرصان</option><option>نصف قرص</option>
+          <option>5 مل</option><option>10 مل</option><option>حقنة</option><option>قطرتان</option>
+        </select>
+      </div>
+      <div class="row"><label>اللون</label>
+        <select id="medColor"><option value="purple">بنفسجي</option><option value="teal">أخضر</option><option value="coral">برتقالي</option></select>
+      </div>
+      <div class="row"><label>ملاحظات</label><textarea id="medNote" placeholder="مثال: تؤخذ بعد الأكل مباشرة..."></textarea></div>
+
+      <div class="add-card-title" style="margin-top:12px">جدول التكرار</div>
+      <div class="row repeat-row">
+        <label>نوع</label>
+        <select id="repeatType" onchange="updateRepeatUI()">
+          <option value="daily">كل يوم</option>
+          <option value="hours">كل X ساعة</option>
+          <option value="weekly">أيام محددة</option>
+        </select>
+      </div>
+      <div id="hoursRow" class="row" style="display:none"><label>كل</label>
+        <input type="number" id="repeatHours" min="1" max="24" value="8" style="width:60px;flex:none" />
+        <span style="font-size:13px;color:var(--color-text-secondary)">ساعة</span>
+      </div>
+      <div id="weeklyRow" style="display:none;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">اختر الأيام:</div>
+        <div class="days-check" id="daysCheck">
+          <label class="day-cb"><input type="checkbox" value="0" checked> الأحد</label>
+          <label class="day-cb"><input type="checkbox" value="1" checked> الاثنين</label>
+          <label class="day-cb"><input type="checkbox" value="2" checked> الثلاثاء</label>
+          <label class="day-cb"><input type="checkbox" value="3" checked> الأربعاء</label>
+          <label class="day-cb"><input type="checkbox" value="4" checked> الخميس</label>
+          <label class="day-cb"><input type="checkbox" value="5"> الجمعة</label>
+          <label class="day-cb"><input type="checkbox" value="6"> السبت</label>
+        </div>
+      </div>
+
+      <div class="add-card-title" style="margin-top:12px">إعدادات التنبيه</div>
+      <div class="row">
+        <label>تنبيه مسبق</label>
+        <select id="preAlert">
+          <option value="0">بدون</option><option value="5">5 دقائق</option>
+          <option value="10">10 دقائق</option><option value="15">15 دقيقة</option>
+          <option value="30">30 دقيقة</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>تنبيه متكرر</label>
+        <select id="repeatAlert">
+          <option value="0">مرة واحدة</option><option value="5">كل 5 د</option>
+          <option value="10">كل 10 د</option><option value="15">كل 15 د</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <button class="add-btn" style="width:100%" onclick="addMed()">إضافة الدواء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-history" class="panel">
+    <div id="historyList"></div>
+  </div>
+
+  <div id="panel-backup" class="panel">
+    <div class="add-card">
+      <div class="add-card-title">النسخ الاحتياطي والاستيراد</div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px">احتفظ بنسخة من بياناتك أو انقلها لجهاز آخر</p>
+      <div class="backup-row">
+        <button class="backup-btn" onclick="exportData()">📤 تصدير JSON</button>
+        <button class="backup-btn" onclick="document.getElementById('importFile').click()">📥 استيراد</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
+      <button class="backup-btn" style="width:100%;margin-top:8px;color:var(--color-text-danger);border-color:var(--color-border-tertiary)" onclick="clearAll()">🗑️ حذف كل البيانات</button>
+    </div>
+    <div class="add-card" style="margin-top:0">
+      <div class="add-card-title">معدل الالتزام لكل دواء</div>
+      <div id="complianceList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let meds = [];
+let log = [];
+try { meds = JSON.parse(localStorage.getItem('meds_v3') || '[]'); } catch(e){ meds=[]; }
+try { log = JSON.parse(localStorage.getItem('medlog_v3') || '[]'); } catch(e){ log=[]; }
+let lastNotif = {};
+let currentFilter = 'all';
+const icons = ['💊','💉','🩺','🌡️','🧴','🔬'];
+const today = () => new Date().toLocaleDateString('ar-EG');
+const todayISO = () => new Date().toISOString().split('T')[0];
+
+function updateRepeatUI(){
+  const v = document.getElementById('repeatType').value;
+  document.getElementById('hoursRow').style.display = v==='hours'?'flex':'none';
+  document.getElementById('weeklyRow').style.display = v==='weekly'?'block':'none';
+}
+
+function switchTab(name, btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='history') renderHistory();
+  if(name==='backup') renderCompliance();
+}
+
+function isTodayActive(med){
+  const rt = med.repeatType || 'daily';
+  if(rt==='daily') return true;
+  if(rt==='weekly'){
+    const day = new Date().getDay();
+    return (med.repeatDays||[]).includes(String(day));
+  }
+  return true;
+}
+
+function getStatus(m){
+  if(m.taken) return 'taken';
+  const now = new Date();
+  const [h,min] = m.time.split(':').map(Number);
+  const medDate = new Date(); medDate.setHours(h,min,0,0);
+  const diff = medDate - now;
+  if(diff < 0) return 'overdue';
+  if(diff <= 5*60*1000) return 'soon';
+  return 'upcoming';
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function addMed(){
+  const name = document.getElementById('medName').value.trim();
+  const time = document.getElementById('medTime').value;
+  if(!name || !time){ showToast('أدخل الاسم والوقت'); return; }
+  const repeatType = document.getElementById('repeatType').value;
+  const repeatDays = repeatType==='weekly'
+    ? [...document.querySelectorAll('#daysCheck input:checked')].map(c=>c.value)
+    : [];
+  const icon = icons[Math.floor(Math.random()*icons.length)];
+  meds.push({
+    id: Date.now(), name, time, icon,
+    dose: document.getElementById('medDose').value,
+    color: document.getElementById('medColor').value,
+    note: document.getElementById('medNote').value.trim(),
+    repeatType,
+    repeatHours: parseInt(document.getElementById('repeatHours').value)||8,
+    repeatDays,
+    preAlert: parseInt(document.getElementById('preAlert').value)||0,
+    repeatAlert: parseInt(document.getElementById('repeatAlert').value)||0,
+    taken: false, snoozeUntil: null,
+    takenHistory: []
+  });
+  save(); render(); renderCompliance();
+  document.getElementById('medName').value='';
+  document.getElementById('medTime').value='';
+  document.getElementById('medNote').value='';
+  showToast('تمت الإضافة ✅');
+}
+
+function toggleTaken(id){
+  const m = meds.find(x=>x.id===id);
+  if(!m) return;
+  m.taken = !m.taken;
+  if(m.taken){
+    const now = new Date();
+    const entry = { date: todayISO(), time: now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}), scheduled: m.time, status: 'ok' };
+    const [sh,sm] = m.time.split(':').map(Number);
+    const sched = new Date(); sched.setHours(sh,sm,0,0);
+    const diffMin = Math.abs((now - sched)/60000);
+    if(diffMin > 30) entry.status = 'late';
+    if(!m.takenHistory) m.takenHistory = [];
+    m.takenHistory.unshift(entry);
+    log.unshift({ id: m.id, name: m.name, ...entry });
+    if(log.length > 200) log = log.slice(0, 200);
+    try { localStorage.setItem('medlog_v3', JSON.stringify(log)); } catch(e){}
+  }
+  save(); render();
+}
+
+function deleteMed(id){
+  meds = meds.filter(x=>x.id!==id); save(); render(); showToast('تم الحذف');
+}
+
+function snoozeMed(id, mins){
+  const m = meds.find(x=>x.id===id);
+  if(!m) return;
+  const until = new Date(Date.now() + mins*60000);
+  m.snoozeUntil = until.getTime();
+  save(); render(); showToast('تم التأجيل '+mins+' دقيقة 😴');
+}
+
+function toggleExpand(id){
+  const el = document.getElementById('expand-'+id);
+  if(el) el.classList.toggle('open');
+}
+
+function save(){
+  try {
+    localStorage.setItem('meds_v3', JSON.stringify(meds));
+  } catch(e){}
+  updateStats();
+}
+
+function getComplianceRate(med){
+  if(!med.takenHistory || med.takenHistory.length===0) return null;
+  const last7 = med.takenHistory.slice(0,7);
+  const onTime = last7.filter(h=>h.status==='ok').length;
+  return Math.round(onTime/last7.length*100);
+}
+
+function updateStats(){
+  const active = meds.filter(m=>isTodayActive(m));
+  const total = active.length;
+  const taken = active.filter(m=>m.taken).length;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-taken').textContent = taken;
+  document.getElementById('s-rem').textContent = total-taken;
+  const pct = total ? Math.round(taken/total*100) : 0;
+  document.getElementById('prog').style.width = pct+'%';
+  const allRates = meds.map(getComplianceRate).filter(r=>r!==null);
+  const avgComply = allRates.length ? Math.round(allRates.reduce((a,b)=>a+b,0)/allRates.length) : 0;
+  document.getElementById('s-comply').textContent = (allRates.length ? avgComply : '--')+'%';
+}
+
+function render(){
+  updateStats();
+  const list = document.getElementById('list');
+  let all = meds.filter(m=>isTodayActive(m));
+  const sortOrder = { overdue:0, soon:1, upcoming:2, taken:3 };
+  all.sort((a,b)=>{
+    const sa = sortOrder[getStatus(a)], sb = sortOrder[getStatus(b)];
+    if(sa!==sb) return sa-sb;
+    return a.time.localeCompare(b.time);
+  });
+  if(currentFilter==='taken') all = all.filter(m=>m.taken);
+  if(currentFilter==='pending') all = all.filter(m=>!m.taken);
+  if(!all.length){ list.innerHTML='<div class="empty">لا توجد أدوية في هذا التصنيف</div>'; return; }
+  const labelMap = { taken:'تم أخذه', overdue:'فات موعده', upcoming:'قادم', soon:'قريبًا' };
+  const repeatLabel = m => {
+    if(!m.repeatType || m.repeatType==='daily') return '';
+    if(m.repeatType==='hours') return 'كل '+m.repeatHours+'س';
+    if(m.repeatType==='weekly') return 'أسبوعي';
+    return '';
+  };
+  list.innerHTML = all.map(m=>{
+    const status = getStatus(m);
+    const snoozeActive = m.snoozeUntil && m.snoozeUntil > Date.now();
+    const rLabel = repeatLabel(m);
+    return `
+    <div class="med-card ${m.taken?'taken':status}" id="card-${m.id}">
+      <div class="med-main">
+        <div class="med-dot ${m.taken?'taken-bg':m.color||'purple'}">${m.taken?'✓':m.icon||'💊'}</div>
+        <div class="med-info">
+          <div class="med-name">${m.name}</div>
+          <div class="med-meta">
+            ${m.time} · ${m.dose}
+            <span class="badge ${status}">${snoozeActive?'😴 مؤجل':labelMap[status]}</span>
+            ${rLabel?`<span class="badge repeat">${rLabel}</span>`:''}
+          </div>
+          ${m.note?`<div class="med-note">📝 ${m.note}</div>`:''}
+        </div>
+        <div class="med-actions">
+          <button class="take-btn ${m.taken?'undo':''}" onclick="toggleTaken(${m.id})">${m.taken?'تراجع':'أخذته'}</button>
+          <button class="expand-btn" onclick="toggleExpand(${m.id})">⋯</button>
+          <button class="del-btn" onclick="deleteMed(${m.id})">✕</button>
+        </div>
+      </div>
+      <div class="med-expanded" id="expand-${m.id}">
+        ${!m.taken?`<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px">تأجيل التنبيه:</div>
+        <div class="snooze-row">
+          <button class="snooze-btn" onclick="snoozeMed(${m.id},5)">5 د</button>
+          <button class="snooze-btn" onclick="snoozeMed(${m.id},10)">10 د</button>
+          <button class="snooze-btn" onclick="snoozeMed(${m.id},15)">15 د</button>
+          <button class="snooze-btn" onclick="snoozeMed(${m.id},30)">30 د</button>
+        </div></div>`:''}
+        ${m.takenHistory && m.takenHistory.length?`
+        <div class="log-section">
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">آخر مرات الأخذ:</div>
+          ${m.takenHistory.slice(0,5).map(h=>`
+          <div class="log-entry">
+            <span class="log-date">${h.date}</span>
+            <span>${h.time}</span>
+            <span class="log-status ${h.status}">${h.status==='ok'?'في الوقت':'متأخر'}</span>
+          </div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(!log.length){ el.innerHTML='<div class="empty">لا يوجد سجل بعد</div>'; return; }
+  const grouped = {};
+  log.forEach(e=>{ if(!grouped[e.date]) grouped[e.date]=[]; grouped[e.date].push(e); });
+  el.innerHTML = Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).map(date=>`
+    <div style="margin-bottom:1rem">
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px">${date}</div>
+      <div class="add-card" style="padding:8px 12px">
+        ${grouped[date].map(e=>`
+        <div class="log-entry" style="padding:5px 0">
+          <span style="font-weight:500">${e.name}</span>
+          <span style="color:var(--color-text-secondary)">${e.scheduled} ← مجدول</span>
+          <span>${e.time}</span>
+          <span class="log-status ${e.status}">${e.status==='ok'?'✓ في الوقت':'⚠ متأخر'}</span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderCompliance(){
+  const el = document.getElementById('complianceList');
+  if(!meds.length){ el.innerHTML='<p style="font-size:12px;color:var(--color-text-secondary)">لا توجد أدوية</p>'; return; }
+  el.innerHTML = meds.map(m=>{
+    const rate = getComplianceRate(m);
+    const color = rate===null?'#888':(rate>=80?'#1D9E75':rate>=50?'#BA7517':'#D85A30');
+    return `<div class="compliance-bar" style="margin-bottom:8px">
+      <span class="compliance-label" style="font-size:12px">${m.name}</span>
+      <div class="c-bar-wrap">
+        <div class="c-bar" style="width:${rate||0}%;background:${color}"></div>
+      </div>
+      <span style="font-size:12px;color:var(--color-text-secondary);min-width:32px;text-align:left">${rate!==null?rate+'%':'—'}</span>
+    </div>`;
+  }).join('');
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify({meds, log}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'meds-backup-'+todayISO()+'.json';
+  a.click();
+  showToast('تم التصدير ✅');
+}
+
+function importData(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if(d.meds) meds = d.meds;
+      if(d.log) log = d.log;
+      save();
+      try { localStorage.setItem('medlog_v3', JSON.stringify(log)); } catch(e){}
+      render(); renderCompliance(); showToast('تم الاستيراد ✅ ('+meds.length+' دواء)');
+    } catch(err){ showToast('خطأ في الملف ❌'); }
+  };
+  r.readAsText(f);
+}
+
+function clearAll(){
+  if(!confirm('هل تريد حذف كل البيانات؟')) return;
+  meds=[]; log=[];
+  localStorage.removeItem('meds_v3'); localStorage.removeItem('medlog_v3');
+  render(); renderCompliance(); showToast('تم الحذف الكامل');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function ringCard(id, name){
+  beep();
+  const card = document.getElementById('card-'+id);
+  if(card){ card.classList.add('ring'); setTimeout(()=>card.classList.remove('ring'),2000); }
+  showToast('حان وقت '+name+'!');
+  if('Notification' in window && Notification.permission==='granted')
+    new Notification('تذكير الدواء 💊', {body:'حان وقت أخذ '+name});
+}
+
+function updateClock(){
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+}
+updateClock(); setInterval(updateClock,1000);
+
+function beep(){
+  try {
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    [0,0.15,0.3].forEach(d=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value=880;
+      g.gain.setValueAtTime(0.3,ctx.currentTime+d);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d+0.2);
+      o.start(ctx.currentTime+d); o.stop(ctx.currentTime+d+0.2);
+    });
+  } catch(e){}
+}
+
+setInterval(()=>{
+  const now = new Date();
+  const cur = now.toTimeString().slice(0,5);
+  meds.forEach(m=>{
+    if(!isTodayActive(m) || m.taken) return;
+    if(m.snoozeUntil && m.snoozeUntil > Date.now()) return;
+    if(m.time===cur){
+      const key = m.id+'-'+cur;
+      if(!lastNotif[key]){ lastNotif[key]=true; ringCard(m.id,m.name); }
+    }
+    if(m.repeatAlert>0 && !m.taken){
+      const [h,min] = m.time.split(':').map(Number);
+      const sched = new Date(); sched.setHours(h,min,0,0);
+      const elapsed = Math.round((now-sched)/60000);
+      if(elapsed>0 && elapsed%m.repeatAlert===0){
+        const rKey = m.id+'-rep-'+elapsed;
+        if(!lastNotif[rKey]){ lastNotif[rKey]=true; ringCard(m.id,m.name+' (تذكير)'); }
+      }
+    }
+    if(m.preAlert>0){
+      const [h,min] = m.time.split(':').map(Number);
+      const sched = new Date(); sched.setHours(h,min,0,0);
+      const diffMin = Math.round((sched-now)/60000);
+      if(diffMin===m.preAlert){
+        const pKey = m.id+'-pre-'+cur;
+        if(!lastNotif[pKey]){ lastNotif[pKey]=true; showToast('تنبيه مسبق: '+m.name+' بعد '+m.preAlert+' د'); }
+      }
+    }
+  });
+  render();
+}, 10000);
+
+render();
+</script>
+</body>
+</html>
