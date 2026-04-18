@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دوائي — إدارة الأدوية</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1D9E75;--green-d:#158a63;--green-bg:#E1F5EE;--green-text:#085041;
+  --blue-bg:#E6F1FB;--blue-text:#185FA5;
+  --amber-bg:#FAEEDA;--amber-text:#633806;--amber-border:#FAC775;
+  --red-bg:#FCEBEB;--red-text:#7a1f1f;--red-border:#f5c5c5;
+  --ok-bg:#eaf7ed;--ok-text:#1a5c2e;--ok-border:#9fd5b0;
+  --gray-bg:#F1EFE8;--gray-text:#444441;
+  --border:#e8e8e4;--border-light:#f0f0ec;
+  --surface:#fff;--page:#f5f5f0;--text:#1a1a1a;--muted:#888;--subtle:#555;
+  --radius:10px;--radius-lg:14px;--radius-xl:18px;
+  --shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--page);min-height:100vh;color:var(--text);display:flex;justify-content:center;padding:0}
+.app{width:100%;max-width:480px;min-height:100vh;background:var(--surface);display:flex;flex-direction:column;position:relative}
+
+/* ── SCREENS ── */
+.screen{display:none;flex:1;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── AUTH ── */
+.auth-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:1.5rem;max-width:400px;margin:0 auto;width:100%}
+.logo{text-align:center;margin-bottom:2rem}
+.logo-icon{width:64px;height:64px;background:var(--green-bg);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:30px}
+.logo h1{font-size:26px;font-weight:700;color:var(--text)}
+.logo p{font-size:14px;color:var(--muted);margin-top:5px}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.75rem;box-shadow:var(--shadow)}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;color:var(--subtle);margin-bottom:7px;font-weight:500}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 14px;
+  border:1px solid #d5d5d0;border-radius:var(--radius);
+  font-size:14px;font-family:inherit;
+  background:var(--surface);color:var(--text);
+  transition:border-color .15s;outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
+.field textarea{resize:vertical;min-height:70px}
+.field select{appearance:none;cursor:pointer}
+.btn-primary{
+  width:100%;padding:12px;background:var(--green);border:none;border-radius:var(--radius);
+  color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s;margin-top:4px;
+}
+.btn-primary:hover{background:var(--green-d)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{
+  width:100%;padding:10px;background:transparent;border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);font-size:14px;font-family:inherit;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:background .15s;
+}
+.btn-secondary:hover{background:var(--page)}
+.btn-danger{
+  width:100%;padding:10px;background:transparent;border:1px solid var(--red-border);
+  border-radius:var(--radius);color:var(--red-text);font-size:14px;font-family:inherit;
+  cursor:pointer;transition:background .15s;
+}
+.btn-danger:hover{background:var(--red-bg)}
+.btn-link{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px;display:block;text-align:center;margin-top:14px;width:100%}
+.btn-link:hover{color:var(--text)}
+.btn-sm{padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;font-size:13px;font-family:inherit;color:var(--text);cursor:pointer;transition:background .15s}
+.btn-sm:hover{background:var(--page)}
+.msg{font-size:13px;padding:10px 14px;border-radius:var(--radius);margin-bottom:16px;display:none}
+.msg.show{display:block}
+.msg.err{color:var(--red-text);background:var(--red-bg);border:1px solid var(--red-border)}
+.msg.ok{color:var(--ok-text);background:var(--ok-bg);border:1px solid var(--ok-border)}
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0}
+.divider span{font-size:12px;color:#bbb;white-space:nowrap}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.quick-label{font-size:12px;color:#bbb;margin-bottom:10px;text-align:center}
+.user-btns{display:flex;gap:8px}
+.user-btn{flex:1;padding:10px 6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--page);font-size:12px;font-family:inherit;color:var(--subtle);cursor:pointer;text-align:center;transition:all .15s}
+.user-btn:hover{border-color:var(--green);background:#f0faf6;color:var(--text)}
+
+/* ── APP HEADER ── */
+.app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  background:var(--surface);position:sticky;top:0;z-index:10;
+}
+.user-pill{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--green-text);flex-shrink:0;cursor:pointer}
+.hdr-info .uname{font-size:14px;font-weight:600}
+.hdr-info .uemail{font-size:11px;color:var(--muted)}
+.logout-btn{font-size:12px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:6px 13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.logout-btn:hover{background:var(--page)}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:flex;border-top:1px solid var(--border);background:var(--surface);padding:.5rem .5rem .75rem}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--muted);border-radius:var(--radius);transition:all .15s}
+.nav-btn .nav-icon{font-size:20px;line-height:1}
+.nav-btn .nav-lbl{font-size:11px;font-weight:500}
+.nav-btn.active{color:var(--green)}
+.nav-btn:hover{background:var(--page)}
+
+/* ── PAGE CONTENT ── */
+.page-content{flex:1;overflow-y:auto;padding:1.25rem}
+.page{display:none}
+.page.active{display:block}
+
+/* ── SECTION TITLE ── */
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.sec-title h2{font-size:16px;font-weight:700}
+.add-btn{display:flex;align-items:center;gap:5px;padding:7px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.add-btn:hover{background:var(--green-d)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.card-actions{display:flex;gap:6px;margin-top:10px}
+.med-name{font-size:15px;font-weight:700}
+.med-sub{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:8px}
+
+/* ── BADGES ── */
+.badge{font-size:11px;padding:3px 10px;border-radius:7px;font-weight:600;white-space:nowrap}
+.b-green{background:var(--green-bg);color:var(--green-text)}
+.b-amber{background:var(--amber-bg);color:var(--amber-text)}
+.b-gray{background:var(--gray-bg);color:var(--gray-text)}
+.b-blue{background:var(--blue-bg);color:var(--blue-text)}
+.b-red{background:var(--red-bg);color:var(--red-text)}
+
+/* ── TIME PILLS ── */
+.times{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pill{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #e0e0dc;background:#f7f7f4;color:#333}
+.pill.done{opacity:.4;text-decoration:line-through}
+.pill.next{background:var(--blue-bg);border-color:#85B7EB;color:var(--blue-text);font-weight:600}
+
+/* ── ORDER TAG ── */
+.order-link{display:flex;align-items:center;gap:8px;padding-top:9px;border-top:1px solid var(--border-light);font-size:12px;color:var(--muted)}
+.otag{font-size:11px;padding:2px 9px;background:var(--blue-bg);color:var(--blue-text);border-radius:6px;font-weight:600}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-bottom:1.25rem}
+.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.prog-bar{height:6px;background:#eee;border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:4px;transition:width .4s}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.stat-box{background:var(--page);border-radius:var(--radius);padding:12px 8px;text-align:center}
+.stat-n{font-size:26px;font-weight:700}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── ALERT ── */
+.alert-card{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius-lg);padding:13px 16px;margin-bottom:1.25rem}
+.alert-t{font-size:14px;font-weight:700;color:var(--amber-text)}
+.alert-d{font-size:12px;color:#854F0B;margin-top:3px}
+
+/* ── TODAY DATE ── */
+.today-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.today-date{font-size:13px;color:var(--muted)}
+.today-title{font-size:16px;font-weight:700}
+
+/* ── PROFILE ── */
+.profile-hero{display:flex;align-items:center;gap:14px;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);margin-bottom:12px;box-shadow:var(--shadow)}
+.avatar-xl{width:60px;height:60px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--green-text);flex-shrink:0}
+.profile-name{font-size:18px;font-weight:700}
+.profile-email{font-size:13px;color:var(--muted);margin-top:2px}
+.info-table{width:100%}
+.info-table tr td{font-size:13px;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.info-table tr:last-child td{border:none}
+.info-table .lbl{color:var(--muted)}
+.info-table .val{text-align:left;font-weight:500}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:1.5rem;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-title{font-size:17px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--page);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+.time-inputs{display:flex;gap:8px;flex-wrap:wrap}
+.time-tag{display:flex;align-items:center;gap:4px;padding:5px 12px;background:var(--page);border:1px solid var(--border);border-radius:20px;font-size:13px}
+.time-tag button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:0 2px}
+.time-tag button:hover{color:var(--red-text)}
+.add-time-row{display:flex;gap:8px;margin-top:8px}
+.add-time-row input{flex:1;padding:8px 12px;border:1px solid #d5d5d0;border-radius:var(--radius);font-size:13px;font-family:inherit}
+.add-time-row button{padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:13px;cursor:pointer}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty p{font-size:13px;line-height:1.6}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── SUPPLY BAR ── */
+.supply-wrap{margin-top:8px}
+.supply-bar{height:4px;background:#eee;border-radius:2px;overflow:hidden;margin-top:4px}
+.supply-fill{height:100%;border-radius:2px;transition:width .3s}
+
+/* ── CHIP CHIPS ── */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:12px;padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--page);color:var(--subtle)}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:1.5rem}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--surface);border-radius:var(--radius-xl);padding:1.5rem;width:100%;max-width:320px}
+.confirm-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.confirm-text{font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6}
+.confirm-actions{display:flex;gap:8px}
+.confirm-actions button{flex:1;padding:10px;border-radius:var(--radius);font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--border);background:transparent}
+.confirm-actions .confirm-ok{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);font-weight:600}
+
+/* ── RESPONSIVE ── */
+@media(min-width:481px){
+  body{padding:1rem}
+  .app{border-radius:var(--radius-xl);overflow:hidden;min-height:auto;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════════════════════════════
+     شاشة تسجيل الدخول
+══════════════════════════════════════════ -->
+<div id="s-login" class="screen">
+  <div class="auth-wrap">
+    <div class="logo">
+      <div class="logo-icon">💊</div>
+      <h1>دوائي</h1>
+      <p>نظام إدارة الأدوية الشخصي</p>
+    </div>
+    <div class="form-card">
+      <div id="login-msg" class="msg err"></div>
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="li-email" placeholder="example@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()">دخول</button>
+      <div class="divider"><span>ليس لديك حساب؟</span></div>
+      <button class="btn-secondary" onclick="showScreen('s-register')">إنشاء حساب جديد</button>
+      <div class="divider"><span>تجربة سريعة</span></div>
+      <div class="quick-label">اختر مستخدماً تجريبياً:</div>
+      <div class="user-btns">
+        <button class="user-btn" onclick="quickLogin('ahmed@demo.com')">أحمد<br><span style="color:#bbb;font-size:10px">demo123</span></button>
+        <button class="user-btn" onclick="quickLogin('sara@demo.com')">سارة<br><span style="color:#bbb;font-size:10px">demo123</span></button>
+        <button class="user-btn" onclick="quickLogin('mhasan@demo.com')">محمد<br><span style="color:#bbb;font-size:10px">demo123</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     شاشة إنشاء حساب
+══════════════════════════════════════════ -->
+<div id="s-register" class="screen">
+  <div class="auth-wrap">
+    <div class="logo">
+      <div class="logo-icon">💊</div>
+      <h1>إنشاء حساب</h1>
+      <p>سجّل بياناتك لتبدأ إدارة أدويتك</p>
+    </div>
+    <div class="form-card">
+      <div id="reg-msg" class="msg err"></div>
+      <div class="field"><label>الاسم الكامل</label><input type="text" id="rg-name" placeholder="محمد أحمد"></div>
+      <div class="field"><label>البريد الإلكتروني</label><input type="email" id="rg-email" placeholder="example@email.com"></div>
+      <div class="field"><label>رقم الهاتف</label><input type="tel" id="rg-phone" placeholder="01xxxxxxxxx"></div>
+      <div class="field"><label>تاريخ الميلاد</label><input type="date" id="rg-dob"></div>
+      <div class="field"><label>كلمة المرور</label><input type="password" id="rg-pass" placeholder="٦ أحرف على الأقل"></div>
+      <div class="field"><label>تأكيد كلمة المرور</label><input type="password" id="rg-pass2" placeholder="أعد كتابة كلمة المرور" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <button class="btn-primary" id="reg-btn" onclick="doRegister()">إنشاء الحساب</button>
+      <button class="btn-link" onclick="showScreen('s-login')">لديّ حساب — تسجيل الدخول</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     شاشة التطبيق الرئيسية
+══════════════════════════════════════════ -->
+<div id="s-app" class="screen" style="flex-direction:column">
+
+  <!-- الهيدر -->
+  <div class="app-header">
+    <div class="user-pill">
+      <div class="avatar" id="hdr-av" onclick="navTo('p-profile')">أ م</div>
+      <div class="hdr-info">
+        <div class="uname" id="hdr-name">أحمد محمد</div>
+        <div class="uemail" id="hdr-email">ahmed@demo.com</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">خروج</button>
+  </div>
+
+  <!-- المحتوى -->
+  <div class="page-content" style="flex:1">
+
+    <!-- ─── صفحة اليوم ─── -->
+    <div id="p-today" class="page active">
+      <div class="today-bar">
+        <div class="today-title">جرعات اليوم</div>
+        <div class="today-date" id="today-date-lbl"></div>
+      </div>
+      <div id="today-alert" class="alert-card" style="display:none">
+        <div class="alert-t" id="today-alert-t"></div>
+        <div class="alert-d" id="today-alert-d"></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-lbl"><span id="prog-lbl-text">التقدم اليومي</span><span id="prog-pct">0٪</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-n" style="color:var(--green)" id="st-done">0</div><div class="stat-l">تم أخذها</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:#BA7517" id="st-left">0</div><div class="stat-l">متبقية</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:var(--blue-text)" id="st-total">0</div><div class="stat-l">إجمالي اليوم</div></div>
+      </div>
+      <div id="today-list"></div>
+      <div id="today-empty" class="empty" style="display:none">
+        <div class="empty-icon">🌿</div>
+        <h3>لا توجد جرعات اليوم</h3>
+        <p>أضف دواء جديد من قائمة "أدويتي"</p>
+      </div>
+    </div>
+
+    <!-- ─── صفحة الأدوية ─── -->
+    <div id="p-meds" class="page">
+      <div class="sec-title">
+        <h2>أدويتي</h2>
+        <button class="add-btn" onclick="openAddMed()">+ إضافة دواء</button>
+      </div>
+      <div id="meds-list"></div>
+      <div id="meds-empty" class="empty" style="display:none">
+        <div class="empty-icon">💊</div>
+        <h3>لا توجد أدوية بعد</h3>
+        <p>اضغط "+ إضافة دواء" لإضافة أول دواء</p>
+      </div>
+    </div>
+
+    <!-- ─── صفحة الطلبات ─── -->
+    <div id="p-orders" class="page">
+      <div class="sec-title">
+        <h2>طلبات الصيدلية</h2>
+        <button class="add-btn" onclick="openAddOrder()">+ طلب جديد</button>
+      </div>
+      <div id="orders-list"></div>
+      <div id="orders-empty" class="empty" style="display:none">
+        <div class="empty-icon">🛒</div>
+        <h3>لا توجد طلبات بعد</h3>
+        <p>اضغط "+ طلب جديد" لتسجيل طلب صيدلية</p>
+      </div>
+    </div>
+
+    <!-- ─── صفحة الحساب ─── -->
+    <div id="p-profile" class="page">
+      <div class="profile-hero">
+        <div class="avatar-xl" id="prof-av">أ م</div>
+        <div>
+          <div class="profile-name" id="prof-name">أحمد محمد</div>
+          <div class="profile-email" id="prof-email">ahmed@demo.com</div>
+        </div>
+      </div>
+      <div class="card">
+        <table class="info-table">
+          <tr><td class="lbl">رقم الهاتف</td><td class="val" id="prof-phone">—</td></tr>
+          <tr><td class="lbl">تاريخ الميلاد</td><td class="val" id="prof-dob">—</td></tr>
+          <tr><td class="lbl">تاريخ الانضمام</td><td class="val" id="prof-joined">—</td></tr>
+          <tr><td class="lbl">عدد الأدوية النشطة</td><td class="val" id="prof-meds-count">0</td></tr>
+          <tr><td class="lbl">إجمالي الطلبات</td><td class="val" id="prof-orders-count">0</td></tr>
+        </table>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <button class="btn-secondary" onclick="openEditProfile()">✏️ تعديل بياناتي</button>
+        <button class="btn-danger" onclick="doLogout()">تسجيل الخروج</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- شريط التنقل -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="navTo('p-today',this)"><span class="nav-icon">🏠</span><span class="nav-lbl">اليوم</span></button>
+    <button class="nav-btn" onclick="navTo('p-meds',this)"><span class="nav-icon">💊</span><span class="nav-lbl">أدويتي</span></button>
+    <button class="nav-btn" onclick="navTo('p-orders',this)"><span class="nav-icon">🛒</span><span class="nav-lbl">طلباتي</span></button>
+    <button class="nav-btn" onclick="navTo('p-profile',this)"><span class="nav-icon">👤</span><span class="nav-lbl">حسابي</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     مودال: إضافة / تعديل دواء
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="med-modal" onclick="if(event.target===this)closeMedModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="med-modal-title">إضافة دواء جديد</div>
+      <button class="modal-close" onclick="closeMedModal()">✕</button>
+    </div>
+    <div id="med-modal-msg" class="msg err"></div>
+    <div class="field"><label>اسم الدواء</label><input type="text" id="m-name" placeholder="مثال: باراسيتامول ٥٠٠ ملغ"></div>
+    <div class="field"><label>الجرعة</label><input type="text" id="m-dose" placeholder="مثال: قرص واحد"></div>
+    <div class="field">
+      <label>عدد مرات اليوم</label>
+      <select id="m-freq">
+        <option value="1">مرة يومياً</option>
+        <option value="2">مرتين يومياً</option>
+        <option value="3">٣ مرات يومياً</option>
+        <option value="4">٤ مرات يومياً</option>
+        <option value="0">عند الحاجة</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>مواعيد الجرعات</label>
+      <div id="times-tags" class="time-inputs"></div>
+      <div class="add-time-row">
+        <input type="time" id="new-time-input" value="08:00">
+        <button onclick="addTimeTag()">+ إضافة</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>ربط بطلب صيدلية</label>
+      <select id="m-order"></select>
+    </div>
+    <div class="field"><label>الطبيب المعالج</label><input type="text" id="m-doctor" placeholder="د. محمد السيد"></div>
+    <div class="field"><label>الغرض من الدواء</label><input type="text" id="m-purpose" placeholder="مثال: ضغط الدم، السكري..."></div>
+    <div class="field"><label>الكمية المتاحة (عدد الأقراص/الجرعات)</label><input type="number" id="m-qty" placeholder="مثال: 30" min="0"></div>
+    <div class="field"><label>ملاحظات</label><textarea id="m-notes" placeholder="مثال: يؤخذ بعد الأكل، تجنب القهوة..."></textarea></div>
+    <button class="btn-primary" id="med-modal-save" onclick="saveMed()">حفظ الدواء</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     مودال: إضافة / تعديل طلب
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="order-modal" onclick="if(event.target===this)closeOrderModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="order-modal-title">طلب صيدلية جديد</div>
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    </div>
+    <div id="order-modal-msg" class="msg err"></div>
+    <div class="field"><label>رقم الطلب / المرجع</label><input type="text" id="o-ref" placeholder="مثال: #2024-001"></div>
+    <div class="field"><label>اسم الصيدلية</label><input type="text" id="o-pharmacy" placeholder="صيدلية النور"></div>
+    <div class="field"><label>تاريخ الطلب</label><input type="date" id="o-date"></div>
+    <div class="field">
+      <label>الأدوية في هذا الطلب</label>
+      <div id="order-meds-checks" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+    </div>
+    <div class="field"><label>الإجمالي (جنيه)</label><input type="number" id="o-total" placeholder="0" min="0"></div>
+    <div class="field"><label>ملاحظات</label><textarea id="o-notes" placeholder="أي ملاحظات على الطلب..."></textarea></div>
+    <button class="btn-primary" id="order-modal-save" onclick="saveOrder()">حفظ الطلب</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     مودال: تعديل الملف الشخصي
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="profile-modal" onclick="if(event.target===this)closeProfileModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">تعديل بياناتي</div>
+      <button class="modal-close" onclick="closeProfileModal()">✕</button>
+    </div>
+    <div id="profile-modal-msg" class="msg err"></div>
+    <div class="field"><label>الاسم الكامل</label><input type="text" id="ep-name"></div>
+    <div class="field"><label>رقم الهاتف</label><input type="tel" id="ep-phone"></div>
+    <div class="field"><label>تاريخ الميلاد</label><input type="date" id="ep-dob"></div>
+    <div class="field"><label>كلمة المرور الجديدة (اتركه فارغاً للإبقاء على الحالية)</label><input type="password" id="ep-pass" placeholder="كلمة مرور جديدة"></div>
+    <button class="btn-primary" onclick="saveProfile()">حفظ التعديلات</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     مودال: تأكيد الحذف
+══════════════════════════════════════════ -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">تأكيد الحذف</div>
+    <div class="confirm-text" id="confirm-text">هل أنت متأكد من الحذف؟</div>
+    <div class="confirm-actions">
+      <button onclick="closeConfirm()">إلغاء</button>
+      <button class="confirm-ok" id="confirm-ok-btn">حذف</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   DB — كل بيانات كل مستخدم مستقلة
+══════════════════════════════════════════════════════ */
+const K_USERS   = 'dw_users';
+const K_SESSION = 'dw_session';
+
+const DEMO_USERS = {
+  'ahmed@demo.com': {
+    name:'أحمد محمد', initials:'أ م', phone:'01012345678', dob:'1985-06-15', pass:'demo123',
+    joined: new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}),
+    meds:[
+      {id:'m1',name:'ميتفورمين ٥٠٠ ملغ',dose:'قرص واحد',freq:3,times:['08:00','14:00','20:00'],doctor:'د. محمد السيد',purpose:'السكري النوع الثاني',qty:45,orderId:'o1',notes:'مع الطعام',active:true,takenToday:['08:00','14:00']},
+      {id:'m2',name:'أتورفاستاتين ٢٠ ملغ',dose:'قرص واحد',freq:1,times:['20:00'],doctor:'د. محمد السيد',purpose:'الكوليسترول',qty:8,orderId:'o2',notes:'',active:true,takenToday:[]},
+      {id:'m3',name:'أملوديبين ٥ ملغ',dose:'قرص واحد',freq:1,times:['08:00'],doctor:'د. سارة أحمد',purpose:'ضغط الدم',qty:12,orderId:'o1',notes:'صباحاً',active:true,takenToday:['08:00']},
+    ],
+    orders:[
+      {id:'o1',ref:'#2024-112',pharmacy:'صيدلية النور',date:'2026-04-01',medIds:['m1','m3'],total:150,notes:''},
+      {id:'o2',ref:'#2024-98',pharmacy:'صيدلية الشفاء',date:'2026-03-20',medIds:['m2'],total:80,notes:''},
+    ]
+  },
+  'sara@demo.com': {
+    name:'سارة علي', initials:'س ع', phone:'01099887766', dob:'1990-03-22', pass:'demo123',
+    joined: new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}),
+    meds:[
+      {id:'m1',name:'فيتامين D3 ١٠٠٠',dose:'كبسولة واحدة',freq:1,times:['08:00'],doctor:'',purpose:'نقص فيتامين د',qty:30,orderId:'o1',notes:'',active:true,takenToday:[]},
+    ],
+    orders:[
+      {id:'o1',ref:'#2024-77',pharmacy:'صيدلية الرعاية',date:'2026-04-05',medIds:['m1'],total:60,notes:''},
+    ]
+  },
+  'mhasan@demo.com': {
+    name:'محمد حسن', initials:'م ح', phone:'01155443322', dob:'1978-11-08', pass:'demo123',
+    joined: new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'}),
+    meds:[], orders:[]
+  }
+};
+
+function getDB(){
+  try{ const r=localStorage.getItem(K_USERS); return r?JSON.parse(r):null; }catch(e){return null;}
+}
+function saveDB(db){ try{localStorage.setItem(K_USERS,JSON.stringify(db));}catch(e){} }
+function ensureDB(){
+  let db=getDB();
+  if(!db){db={...DEMO_USERS};saveDB(db);}
+  // حذف أي مفتاح ليس له demos مهيأة
+  Object.keys(DEMO_USERS).forEach(k=>{ if(!db[k]) db[k]={...DEMO_USERS[k]}; });
+  return db;
+}
+function getSession(){ try{const r=localStorage.getItem(K_SESSION);return r?JSON.parse(r):null;}catch(e){return null;} }
+function setSession(email){ try{localStorage.setItem(K_SESSION,JSON.stringify({email}));}catch(e){} }
+function clearSession(){ try{localStorage.removeItem(K_SESSION);}catch(e){} }
+
+let currentEmail='';
+function userData(){ const db=ensureDB(); return db[currentEmail]||null; }
+function saveUser(u){ const db=ensureDB(); db[currentEmail]=u; saveDB(db); }
+
+/* ══ توليد ID ══ */
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+/* ══ مساعدات UI ══ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showMsg(id,text,type='err'){const el=document.getElementById(id);el.textContent=text;el.className='msg show '+type;}
+function hideMsg(id){document.getElementById(id).className='msg';}
+function setLoading(id,on){
+  const b=document.getElementById(id); if(!b)return;
+  if(on){b._lbl=b._lbl||b.textContent;b.disabled=true;b.innerHTML=b._lbl+'<span class="spinner"></span>';}
+  else{b.disabled=false;b.textContent=b._lbl||b.textContent;}
+}
+function getInitials(n){ return n.trim().split(/\s+/).map(w=>w[0]).join(' ').slice(0,3); }
+function fmtDate(iso){
+  if(!iso)return'—';
+  try{return new Date(iso).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});}catch(e){return iso;}
+}
+
+/* ══ تطبيق بيانات المستخدم في الواجهة ══ */
+function applyUser(u,email){
+  const ini=u.initials||getInitials(u.name);
+  document.getElementById('hdr-av').textContent   = ini;
+  document.getElementById('hdr-name').textContent = u.name;
+  document.getElementById('hdr-email').textContent= email;
+  document.getElementById('prof-av').textContent  = ini;
+  document.getElementById('prof-name').textContent= u.name;
+  document.getElementById('prof-email').textContent=email;
+  document.getElementById('prof-phone').textContent=u.phone||'—';
+  document.getElementById('prof-dob').textContent  =fmtDate(u.dob);
+  document.getElementById('prof-joined').textContent=u.joined||'—';
+  document.getElementById('prof-meds-count').textContent=(u.meds||[]).filter(m=>m.active).length+'';
+  document.getElementById('prof-orders-count').textContent=(u.orders||[]).length+'';
+}
+
+/* ══ التنقل ══ */
+function navTo(pageId, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else{
+    const map={'p-today':0,'p-meds':1,'p-orders':2,'p-profile':3};
+    const btns=document.querySelectorAll('.nav-btn');
+    if(btns[map[pageId]])btns[map[pageId]].classList.add('active');
+  }
+  if(pageId==='p-today') renderToday();
+  if(pageId==='p-meds')  renderMeds();
+  if(pageId==='p-orders')renderOrders();
+  if(pageId==='p-profile'){
+    const u=userData(); if(u){applyUser(u,currentEmail);}
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   رندر صفحة اليوم
+══════════════════════════════════════════════════════ */
+function renderToday(){
+  const u=userData(); if(!u)return;
+  const now=new Date();
+  document.getElementById('today-date-lbl').textContent=now.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'});
+
+  const meds=(u.meds||[]).filter(m=>m.active&&m.freq>0);
+  const totalDoses=meds.reduce((a,m)=>a+(m.times||[]).length,0);
+  const takenDoses=meds.reduce((a,m)=>a+(m.takenToday||[]).length,0);
+  const leftDoses=totalDoses-takenDoses;
+  const pct=totalDoses?Math.round(takenDoses/totalDoses*100):0;
+
+  document.getElementById('st-done').textContent=takenDoses;
+  document.getElementById('st-left').textContent=leftDoses;
+  document.getElementById('st-total').textContent=totalDoses;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'٪';
+  document.getElementById('prog-lbl-text').textContent=`التقدم اليومي — ${takenDoses} من ${totalDoses} جرعة`;
+
+  // تنبيه الجرعة القادمة
+  const alertEl=document.getElementById('today-alert');
+  let nextMed=null, nextTime=null;
+  const nowMinutes=now.getHours()*60+now.getMinutes();
+  meds.forEach(m=>{
+    (m.times||[]).forEach(t=>{
+      if((m.takenToday||[]).includes(t))return;
+      const [h,min]=t.split(':').map(Number);
+      const tMin=h*60+min;
+      if(tMin>=nowMinutes){
+        if(!nextTime||tMin<nextTime){nextTime=tMin;nextMed={...m,_time:t};}
+      }
+    });
+  });
+  if(nextMed){
+    const diff=nextTime-nowMinutes;
+    const diffTxt=diff<=0?'الآن':diff<60?`خلال ${diff} دقيقة`:`خلال ${Math.round(diff/60)} ساعة`;
+    document.getElementById('today-alert-t').textContent=`تذكير: ${nextMed.name} — ${nextMed.dose}`;
+    document.getElementById('today-alert-d').textContent=`الموعد: ${nextMed._time} (${diffTxt})`;
+    alertEl.style.display='block';
+  } else { alertEl.style.display='none'; }
+
+  const list=document.getElementById('today-list');
+  const empty=document.getElementById('today-empty');
+  if(!meds.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  list.innerHTML=meds.map(m=>{
+    const taken=m.takenToday||[];
+    const allDone=taken.length>=(m.times||[]).length&&m.times.length>0;
+    const statusBadge=allDone?'<span class="badge b-green">مكتمل ✓</span>':
+      taken.length>0?'<span class="badge b-amber">جزئي</span>':
+      '<span class="badge b-blue">لم يؤخذ بعد</span>';
+
+    const pills=(m.times||[]).map(t=>{
+      const isDone=taken.includes(t);
+      const isNext=!isDone&&nextMed&&nextMed.id===m.id&&nextMed._time===t;
+      const cls=isDone?'done':isNext?'next':'';
+      return `<span class="pill ${cls}">${t}${isDone?' ✓':isNext?' ←':''}</span>`;
+    }).join('');
+
+    const order=m.orderId?(u.orders||[]).find(o=>o.id===m.orderId):null;
+    const orderTag=order?`<span class="otag">${order.ref}</span>`:''
+    const supplyPct=m.qty>0?Math.min(100,m.qty/90*100):0;
+    const supplyColor=m.qty<=5?'#E24B4A':m.qty<=15?'#BA7517':'var(--green)';
+
+    const undoneTime=(m.times||[]).filter(t=>!taken.includes(t));
+    const takeBtns=undoneTime.map(t=>`<button class="btn-sm" onclick="takeDose('${m.id}','${t}')">✓ أخذت جرعة ${t}</button>`).join('');
+
+    return `<div class="card" id="today-card-${m.id}">
+      <div class="card-row"><span class="med-name">${m.name}</span>${statusBadge}</div>
+      <div class="med-sub">${m.dose}${m.purpose?' · '+m.purpose:''}</div>
+      <div class="times">${pills||'<span style="font-size:12px;color:var(--muted)">عند الحاجة</span>'}</div>
+      ${m.qty>0?`<div class="supply-wrap"><div style="font-size:12px;color:var(--muted)">المخزون: ${m.qty} وحدة متبقية</div><div class="supply-bar"><div class="supply-fill" style="width:${supplyPct}%;background:${supplyColor}"></div></div></div>`:''}
+      ${order?`<div class="order-link">${orderTag}<span>${order.pharmacy}</span></div>`:''}
+      ${takeBtns?`<div class="card-actions">${takeBtns}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function takeDose(medId, time){
+  const u=userData();
+  const m=u.meds.find(x=>x.id===medId);
+  if(!m)return;
+  if(!m.takenToday)m.takenToday=[];
+  if(!m.takenToday.includes(time)){
+    m.takenToday.push(time);
+    if(m.qty>0)m.qty--;
+  }
+  saveUser(u);
+  renderToday();
+}
+
+/* ══════════════════════════════════════════════════════
+   رندر صفحة الأدوية
+══════════════════════════════════════════════════════ */
+function renderMeds(){
+  const u=userData(); if(!u)return;
+  const meds=u.meds||[];
+  const list=document.getElementById('meds-list');
+  const empty=document.getElementById('meds-empty');
+  if(!meds.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  list.innerHTML=meds.map(m=>{
+    const order=m.orderId?(u.orders||[]).find(o=>o.id===m.orderId):null;
+    const badge=m.active?(m.qty<=5&&m.qty>0?'<span class="badge b-red">ينتهي قريباً</span>':'<span class="badge b-green">نشط</span>'):'<span class="badge b-gray">موقوف</span>';
+    const supplyPct=m.qty>0?Math.min(100,m.qty/90*100):0;
+    const supplyColor=m.qty<=5?'#E24B4A':m.qty<=15?'#BA7517':'var(--green)';
+    return `<div class="card">
+      <div class="card-row"><span class="med-name">${m.name}</span>${badge}</div>
+      <div class="med-sub">
+        ${m.dose?' الجرعة: '+m.dose+'<br>':''}
+        ${m.freq===0?'عند الحاجة':'يومياً: '+m.freq+' مرة'}
+        ${m.times&&m.times.length?' — '+m.times.join('، '):''}
+        ${m.doctor?'<br>الطبيب: '+m.doctor:''}
+        ${m.purpose?'<br>الغرض: '+m.purpose:''}
+        ${m.notes?'<br>ملاحظات: '+m.notes:''}
+      </div>
+      ${m.qty>0?`<div class="supply-wrap"><div style="font-size:12px;color:var(--muted)">المخزون: ${m.qty} وحدة</div><div class="supply-bar"><div class="supply-fill" style="width:${supplyPct}%;background:${supplyColor}"></div></div></div>`:''}
+      ${order?`<div class="order-link"><span class="otag">${order.ref}</span><span>${order.pharmacy}</span></div>`:''}
+      <div class="card-actions">
+        <button class="btn-sm" onclick="openEditMed('${m.id}')">✏️ تعديل</button>
+        <button class="btn-sm" onclick="${m.active?`toggleMed('${m.id}',false)`:`toggleMed('${m.id}',true)`}">${m.active?'⏸ إيقاف':'▶ تفعيل'}</button>
+        <button class="btn-sm" style="color:var(--red-text);border-color:var(--red-border)" onclick="confirmDelete('دواء','${m.id}','med')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMed(id,active){
+  const u=userData();
+  const m=u.meds.find(x=>x.id===id);
+  if(m){m.active=active;saveUser(u);renderMeds();}
+}
+
+/* ══════════════════════════════════════════════════════
+   رندر صفحة الطلبات
+══════════════════════════════════════════════════════ */
+function renderOrders(){
+  const u=userData(); if(!u)return;
+  const orders=(u.orders||[]).slice().reverse();
+  const list=document.getElementById('orders-list');
+  const empty=document.getElementById('orders-empty');
+  if(!orders.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  list.innerHTML=orders.map(o=>{
+    const linkedMeds=(u.meds||[]).filter(m=>o.medIds&&o.medIds.includes(m.id));
+    const chips=linkedMeds.map(m=>`<span class="chip">${m.name}</span>`).join('');
+    return `<div class="card">
+      <div class="card-row">
+        <span style="font-size:15px;font-weight:700">${o.ref}</span>
+        ${o.total?`<span class="badge b-green">${o.total} ج.م</span>`:''}
+      </div>
+      <div class="med-sub">
+        ${o.pharmacy?'الصيدلية: '+o.pharmacy+'<br>':''}
+        ${o.date?'التاريخ: '+fmtDate(o.date):''}
+        ${o.notes?'<br>'+o.notes:''}
+      </div>
+      ${chips?`<div class="chips">${chips}</div>`:''}
+      <div class="card-actions">
+        <button class="btn-sm" onclick="openEditOrder('${o.id}')">✏️ تعديل</button>
+        <button class="btn-sm" style="color:var(--red-text);border-color:var(--red-border)" onclick="confirmDelete('طلب','${o.id}','order')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   مودال الدواء
+══════════════════════════════════════════════════════ */
+let editMedId=null;
+let tempTimes=[];
+
+function openAddMed(){
+  editMedId=null; tempTimes=[];
+  document.getElementById('med-modal-title').textContent='إضافة دواء جديد';
+  document.getElementById('med-modal-save').textContent='حفظ الدواء';
+  document.getElementById('med-modal-save')._lbl='حفظ الدواء';
+  ['m-name','m-dose','m-doctor','m-purpose','m-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-qty').value='';
+  document.getElementById('m-freq').value='1';
+  hideMsg('med-modal-msg');
+  renderTimeTags();
+  populateOrderSelect();
+  document.getElementById('med-modal').classList.add('open');
+}
+
+function openEditMed(id){
+  const u=userData();
+  const m=u.meds.find(x=>x.id===id); if(!m)return;
+  editMedId=id;
+  tempTimes=[...(m.times||[])];
+  document.getElementById('med-modal-title').textContent='تعديل الدواء';
+  document.getElementById('med-modal-save').textContent='حفظ التعديلات';
+  document.getElementById('med-modal-save')._lbl='حفظ التعديلات';
+  document.getElementById('m-name').value=m.name||'';
+  document.getElementById('m-dose').value=m.dose||'';
+  document.getElementById('m-freq').value=String(m.freq??1);
+  document.getElementById('m-doctor').value=m.doctor||'';
+  document.getElementById('m-purpose').value=m.purpose||'';
+  document.getElementById('m-notes').value=m.notes||'';
+  document.getElementById('m-qty').value=m.qty||'';
+  hideMsg('med-modal-msg');
+  renderTimeTags();
+  populateOrderSelect(m.orderId);
+  document.getElementById('med-modal').classList.add('open');
+}
+
+function closeMedModal(){ document.getElementById('med-modal').classList.remove('open'); }
+
+function renderTimeTags(){
+  const wrap=document.getElementById('times-tags');
+  wrap.innerHTML=tempTimes.map((t,i)=>`
+    <span class="time-tag">
+      ${t}
+      <button onclick="removeTimeTag(${i})">✕</button>
+    </span>`).join('');
+}
+function addTimeTag(){
+  const v=document.getElementById('new-time-input').value;
+  if(!v)return;
+  if(!tempTimes.includes(v)){tempTimes.push(v);tempTimes.sort();}
+  renderTimeTags();
+}
+function removeTimeTag(i){ tempTimes.splice(i,1); renderTimeTags(); }
+
+function populateOrderSelect(selectedId){
+  const u=userData();
+  const sel=document.getElementById('m-order');
+  sel.innerHTML='<option value="">— بدون ربط —</option>'+(u.orders||[]).map(o=>`<option value="${o.id}"${o.id===selectedId?' selected':''}>${o.ref} — ${o.pharmacy}</option>`).join('');
+}
+
+function saveMed(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){showMsg('med-modal-msg','يرجى إدخال اسم الدواء');return;}
+  setLoading('med-modal-save',true);
+  setTimeout(()=>{
+    const u=userData();
+    const medData={
+      name,
+      dose: document.getElementById('m-dose').value.trim(),
+      freq: parseInt(document.getElementById('m-freq').value)||0,
+      times: [...tempTimes],
+      doctor: document.getElementById('m-doctor').value.trim(),
+      purpose: document.getElementById('m-purpose').value.trim(),
+      notes: document.getElementById('m-notes').value.trim(),
+      qty: parseInt(document.getElementById('m-qty').value)||0,
+      orderId: document.getElementById('m-order').value||null,
+      active: true,
+    };
+    if(editMedId){
+      const idx=u.meds.findIndex(x=>x.id===editMedId);
+      if(idx>-1){ const old=u.meds[idx]; u.meds[idx]={...old,...medData,id:editMedId,takenToday:old.takenToday||[]}; }
+    } else {
+      u.meds.push({...medData,id:uid(),takenToday:[]});
+    }
+    saveUser(u);
+    setLoading('med-modal-save',false);
+    closeMedModal();
+    renderMeds();
+    renderToday();
+  },400);
+}
+
+/* ══════════════════════════════════════════════════════
+   مودال الطلب
+══════════════════════════════════════════════════════ */
+let editOrderId=null;
+
+function openAddOrder(){
+  editOrderId=null;
+  document.getElementById('order-modal-title').textContent='طلب صيدلية جديد';
+  document.getElementById('order-modal-save').textContent='حفظ الطلب';
+  document.getElementById('order-modal-save')._lbl='حفظ الطلب';
+  ['o-ref','o-pharmacy','o-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('o-total').value='';
+  document.getElementById('o-date').value=new Date().toISOString().slice(0,10);
+  hideMsg('order-modal-msg');
+  renderOrderMedsChecks([]);
+  document.getElementById('order-modal').classList.add('open');
+}
+
+function openEditOrder(id){
+  const u=userData();
+  const o=u.orders.find(x=>x.id===id); if(!o)return;
+  editOrderId=id;
+  document.getElementById('order-modal-title').textContent='تعديل الطلب';
+  document.getElementById('order-modal-save').textContent='حفظ التعديلات';
+  document.getElementById('order-modal-save')._lbl='حفظ التعديلات';
+  document.getElementById('o-ref').value=o.ref||'';
+  document.getElementById('o-pharmacy').value=o.pharmacy||'';
+  document.getElementById('o-date').value=o.date||'';
+  document.getElementById('o-total').value=o.total||'';
+  document.getElementById('o-notes').value=o.notes||'';
+  hideMsg('order-modal-msg');
+  renderOrderMedsChecks(o.medIds||[]);
+  document.getElementById('order-modal').classList.add('open');
+}
+
+function closeOrderModal(){ document.getElementById('order-modal').classList.remove('open'); }
+
+function renderOrderMedsChecks(selectedIds){
+  const u=userData();
+  const wrap=document.getElementById('order-meds-checks');
+  wrap.innerHTML=(u.meds||[]).map(m=>`
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+      <input type="checkbox" value="${m.id}" ${selectedIds.includes(m.id)?'checked':''} style="width:auto">
+      ${m.name}
+    </label>`).join('');
+}
+
+function saveOrder(){
+  const ref=document.getElementById('o-ref').value.trim()||'#'+uid().toUpperCase();
+  setLoading('order-modal-save',true);
+  setTimeout(()=>{
+    const u=userData();
+    const medIds=Array.from(document.querySelectorAll('#order-meds-checks input:checked')).map(x=>x.value);
+    const orderData={
+      ref,
+      pharmacy: document.getElementById('o-pharmacy').value.trim(),
+      date: document.getElementById('o-date').value,
+      total: parseFloat(document.getElementById('o-total').value)||0,
+      notes: document.getElementById('o-notes').value.trim(),
+      medIds,
+    };
+    if(editOrderId){
+      const idx=u.orders.findIndex(x=>x.id===editOrderId);
+      if(idx>-1)u.orders[idx]={...u.orders[idx],...orderData};
+    } else {
+      u.orders.push({...orderData,id:uid()});
+    }
+    saveUser(u);
+    setLoading('order-modal-save',false);
+    closeOrderModal();
+    renderOrders();
+  },400);
+}
+
+/* ══════════════════════════════════════════════════════
+   مودال تعديل الملف الشخصي
+══════════════════════════════════════════════════════ */
+function openEditProfile(){
+  const u=userData();
+  document.getElementById('ep-name').value=u.name||'';
+  document.getElementById('ep-phone').value=u.phone||'';
+  document.getElementById('ep-dob').value=u.dob||'';
+  document.getElementById('ep-pass').value='';
+  hideMsg('profile-modal-msg');
+  document.getElementById('profile-modal').classList.add('open');
+}
+function closeProfileModal(){ document.getElementById('profile-modal').classList.remove('open'); }
+
+function saveProfile(){
+  const name=document.getElementById('ep-name').value.trim();
+  if(!name){showMsg('profile-modal-msg','يرجى إدخال الاسم');return;}
+  const u=userData();
+  u.name=name;
+  u.phone=document.getElementById('ep-phone').value.trim();
+  u.dob=document.getElementById('ep-dob').value;
+  u.initials=getInitials(name);
+  const newPass=document.getElementById('ep-pass').value;
+  if(newPass){
+    if(newPass.length<6){showMsg('profile-modal-msg','كلمة المرور يجب أن تكون ٦ أحرف على الأقل');return;}
+    u.pass=newPass;
+  }
+  saveUser(u);
+  applyUser(u,currentEmail);
+  closeProfileModal();
+  showMsg('profile-modal-msg','تم الحفظ','ok');
+}
+
+/* ══════════════════════════════════════════════════════
+   تأكيد الحذف
+══════════════════════════════════════════════════════ */
+function confirmDelete(type,id,kind){
+  document.getElementById('confirm-title').textContent='حذف '+type;
+  document.getElementById('confirm-text').textContent='هل أنت متأكد من حذف هذا '+type+'؟ لا يمكن التراجع.';
+  document.getElementById('confirm-ok-btn').onclick=()=>{
+    const u=userData();
+    if(kind==='med') u.meds=u.meds.filter(x=>x.id!==id);
+    if(kind==='order') u.orders=u.orders.filter(x=>x.id!==id);
+    saveUser(u);
+    closeConfirm();
+    if(kind==='med'){renderMeds();renderToday();}
+    if(kind==='order') renderOrders();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm(){ document.getElementById('confirm-overlay').classList.remove('open'); }
+
+/* ══════════════════════════════════════════════════════
+   Auth
+══════════════════════════════════════════════════════ */
+function enterApp(email){
+  currentEmail=email;
+  setSession(email);
+  const u=userData();
+  applyUser(u,email);
+  showScreen('s-app');
+  navTo('p-today',document.querySelectorAll('.nav-btn')[0]);
+}
+
+function doLogin(){
+  hideMsg('login-msg');
+  const email=document.getElementById('li-email').value.trim().toLowerCase();
+  const pass=document.getElementById('li-pass').value;
+  if(!email||!pass){showMsg('login-msg','يرجى ملء جميع الحقول');return;}
+  setLoading('login-btn',true);
+  setTimeout(()=>{
+    const db=ensureDB();
+    const u=db[email];
+    setLoading('login-btn',false);
+    if(!u||u.pass!==pass){showMsg('login-msg','البريد أو كلمة المرور غير صحيحة');return;}
+    enterApp(email);
+  },500);
+}
+
+function quickLogin(email){
+  ensureDB();
+  document.getElementById('li-email').value=email;
+  document.getElementById('li-pass').value='demo123';
+  doLogin();
+}
+
+function doRegister(){
+  hideMsg('reg-msg');
+  const name=document.getElementById('rg-name').value.trim();
+  const email=document.getElementById('rg-email').value.trim().toLowerCase();
+  const phone=document.getElementById('rg-phone').value.trim();
+  const dob=document.getElementById('rg-dob').value;
+  const pass=document.getElementById('rg-pass').value;
+  const pass2=document.getElementById('rg-pass2').value;
+  if(!name||!email||!phone||!pass||!pass2){showMsg('reg-msg','يرجى ملء جميع الحقول');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('reg-msg','البريد الإلكتروني غير صحيح');return;}
+  if(pass.length<6){showMsg('reg-msg','كلمة المرور يجب أن تكون ٦ أحرف على الأقل');return;}
+  if(pass!==pass2){showMsg('reg-msg','كلمتا المرور غير متطابقتين');return;}
+  setLoading('reg-btn',true);
+  setTimeout(()=>{
+    const db=ensureDB();
+    if(db[email]){setLoading('reg-btn',false);showMsg('reg-msg','هذا البريد مسجّل بالفعل — يمكنك تسجيل الدخول');return;}
+    const joined=new Date().toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});
+    db[email]={name,initials:getInitials(name),phone,dob,pass,joined,meds:[],orders:[]};
+    saveDB(db);
+    setLoading('reg-btn',false);
+    showMsg('reg-msg','تم إنشاء الحساب بنجاح!','ok');
+    setTimeout(()=>enterApp(email),800);
+  },600);
+}
+
+function doLogout(){
+  currentEmail='';
+  clearSession();
+  document.getElementById('li-email').value='';
+  document.getElementById('li-pass').value='';
+  hideMsg('login-msg');
+  showScreen('s-login');
+}
+
+/* ══════════════════════════════════════════════════════
+   استعادة الجلسة
+══════════════════════════════════════════════════════ */
+(function init(){
+  const session=getSession();
+  if(session&&session.email){
+    const db=ensureDB();
+    if(db[session.email]){enterApp(session.email);return;}
+  }
+  ensureDB();
+  showScreen('s-login');
+})();
+</script>
+</body>
+</html>
